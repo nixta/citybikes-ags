@@ -10,62 +10,112 @@ var templateHeader = '<table width="100%" class="userTable"><tr><td class="title
 var templateNav = '<table class="navTable" width="100%"><tbody><tr valign="top"><td class="breadcrumbs"><a href="/services">Home</a> > <a href="/services">services</a> </td><td align="right"><a href="?f=help" target="_blank">API Reference</a></td></tr></tbody></table>';
 var templateAPIRef = '<table><tr><td class="apiref"><a href="?f=pjson" target="_blank">JSON</a></td></tr></table>';
 
+var templateSvcDef = '<b>View In: </b>&nbsp;&nbsp;<a href="http://www.arcgis.com/home/webmap/viewer.html?url=http://services.arcgis.com/OfH668nDRN7tbJh0/ArcGIS/rest/services/centerln/FeatureServer&source=sd" target="_blank">ArcGIS.com Map</a>&nbsp;&nbsp;<a href="http://explorer.arcgis.com?url=http://services.arcgis.com/OfH668nDRN7tbJh0/ArcGIS/rest/services/centerln/FeatureServer&source=sd" target="_blank">ArcGIS Explorer Online</a><br/><br/><b>Service Description:</b> Passthrough service, translating <a href="http://api.citybik.es">CitiBikes API</a> output into ArcGIS Feature Service JSON<br/><br/><b>Has Versioned Data:</b> %s<br/><br/><b>Max Record Count:</b> %d<br/><br/><b>Supported query Formats:</b> %s<br/><br/><a href="/OfH668nDRN7tbJh0/ArcGIS/rest/services/centerln/FeatureServer/layers">All Layers and Tables</a><br/><br/><b>Layers:</b> <br/><ul><li><a href="%s/0">%s</a> (0)</li></ul><br/><b>Description:</b> %s<br/><br/><b>Copyright Text:</b> %s<br/><br/><b>Spatial Reference:</b> %d<br/><br/> <b>Initial Extent:</b> <br/> <ul> %s </ul> <b>Full Extent:</b> <br/> <ul> %s </ul> <b>Units:</b> %s<br/> <br/> <b>Supported Operations: </b> &nbsp;&nbsp;<a href="%s/query">Query</a> <br/><br/>';
 
-var templateSvcDevLayer = '';
+var templateEnvelope = 'XMin: %d<br/> YMin: %d<br/> XMax: %d<br/> YMax: %d<br/> Spatial Reference: %d<br/>';
 
-var templateSvcDef = '<b>View In: </b>&nbsp;&nbsp;<a href="http://www.arcgis.com/home/webmap/viewer.html?url=http://services.arcgis.com/OfH668nDRN7tbJh0/ArcGIS/rest/services/centerln/FeatureServer&source=sd" target="_blank">ArcGIS.com Map</a>&nbsp;&nbsp;<a href="http://explorer.arcgis.com?url=http://services.arcgis.com/OfH668nDRN7tbJh0/ArcGIS/rest/services/centerln/FeatureServer&source=sd" target="_blank">ArcGIS Explorer Online</a><br/><br/><b>Service Description:</b> Passthrough service, translating <a href="http://api.citybik.es">CitiBikes API</a> output into ArcGIS Feature Service JSON<br/><br/><b>Has Versioned Data:</b> %s<br/><br/><b>Max Record Count:</b> %d<br/><br/><b>Supported query Formats:</b> %s<br/><br/><a href="/OfH668nDRN7tbJh0/ArcGIS/rest/services/centerln/FeatureServer/layers">All Layers and Tables</a><br/><br/><b>Layers:</b> <br/><ul><li><a href="%s/0">%s</a> (0)</li></ul><br/><b>Description:</b> %s<br/><br/><b>Copyright Text:</b> %s<br/><br/><b>Spatial Reference:</b> %d<br/><br/> <b>Initial Extent:</b> <br/> <ul> XMin: -8266226.09782051<br/> YMin: 4938432.22174575<br/> XMax: -8204160.52197109<br/> YMax: 4999832.71327076<br/> Spatial Reference: 102100<br/> </ul> <b>Full Extent:</b> <br/> <ul> XMin: -8266226.09782051<br/> YMin: 4938432.22174575<br/> XMax: -8204160.52197109<br/> YMax: 4999832.71327076<br/> Spatial Reference: 102100<br/> </ul> <b>Units:</b> esriMeters<br/> <br/> <b>Supported Operations: </b> &nbsp;&nbsp;<a href="%s/query">Query</a> <br/><br/>';
+var templatePoint = '{"x" : %d, "y" : %d, "spatialReference" : {"wkid" : 4326}}';
 
 var serviceDef = {
 	"currentVersion": 10.11,
 	"serviceDescription": "",
 	"hasVersionedData": false,
 	"supportsDisconnectedEditing": false,
-	"hasStaticData": true,
-	"maxRecordCount": 2000,
 	"supportedQueryFormats": "JSON",
+	"maxRecordCount": 2000,
+	"hasStaticData": true,
 	"capabilities": "Query",
 	"description": "",
 	"copyrightText": "",
 	"spatialReference": {
-	"wkid": 102100,
-	"latestWkid": 3857
+		"wkid": 4326,
+		"latestWkid": 4326
 	},
 	"initialExtent": {
-		"xmin": -8265256.72632696,
-		"ymin": 4939635.1307387,
-		"xmax": -8205149.95759848,
-		"ymax": 4998866.91035783,
+		"xmin": -180,
+		"ymin": -90,
+		"xmax": 180,
+		"ymax": 90,
 		"spatialReference": {
-			"wkid": 102100,
-			"latestWkid": 3857
+			"wkid": 4326,
+			"latestWkid": 4326
 		}
 	},
 	"fullExtent": {
-		"xmin": -8265256.72632696,
-		"ymin": 4939635.1307387,
-		"xmax": -8205149.95759848,
-		"ymax": 4998866.91035783,
+		"xmin": -180,
+		"ymin": -90,
+		"xmax": 180,
+		"ymax": 90,
 		"spatialReference": {
-			"wkid": 102100,
-			"latestWkid": 3857
+			"wkid": 4326,
+			"latestWkid": 4326
 		}
 	},
-	"allowGeometryUpdates": true,
-	"units": "esriMeters",
+	"allowGeometryUpdates": false,
+	"units": "esriDecimalDegrees",
 	"syncEnabled": false,
-	"editorTrackingInfo": {
-		"enableEditorTracking": false,
-		"enableOwnershipAccessControl": false,
-		"allowOthersToUpdate": true,
-		"allowOthersToDelete": false
-	},
-	"xssPreventionInfo": {
-		"xssPreventionEnabled": true,
-		"xssPreventionRule": "InputOnly",
-		"xssInputRule": "rejectInvalid"
-	},
 	"layers": [],
 	"tables": []
+};
+
+var layerDef = {
+"currentVersion": 10.11,
+"id" : 0,
+"name" : "Not Set",
+"type" : "Feature Layer",
+"displayField" : "name",
+"description" : "Bikes",
+"copyrightText" : "citybik.es",
+"defaultVisibility": true,
+"relationships": [],
+
+"syncCanReturnChanges": false,
+"isDataVersioned": false,
+"supportsRollbackOnFailureParameter": false,
+"supportsStatistics": false,
+"supportsAdvancedQueries":false,
+
+"geometryType" : "esriGeometryPoint",
+"minScale" : 0,
+"maxScale" : 0,
+"extent" :  {
+	"xmin": -180,
+	"ymin": -90,
+	"xmax": 180,
+	"ymax": 90,
+	"spatialReference": {
+	"wkid": 4326,
+	"latestWkid": 4326
+	}
+},
+
+"hasM":  false, 
+"hasZ":  false,
+"allowGeometryUpdates": false,
+
+"hasAttachments" : false,
+
+"htmlPopupType" : "esriServerHTMLPopupTypeNone",
+
+"objectIdField" : "id",
+"globalIdField" : "",
+"typeIdField" : "",
+"fields" : [
+  {"name" : "id", "type" : "esriFieldTypeInteger", "alias" : "ID", "nullable" : "true", "domain" : null},
+  {"name" : "idx", "type" : "esriFieldTypeInteger", "alias" : "IDX", "nullable" : "true", "domain" : null},
+  {"name" : "name", "type" : "esriFieldTypeString", "alias" : "Name", "length" : "255", "nullable" : "true", "domain" : null},
+  {"name" : "number", "type" : "esriFieldTypeInteger", "alias" : "Number", "nullable" : "true", "domain" : null},
+  {"name" : "free", "type" : "esriFieldTypeInteger", "alias" : "Free", "nullable" : "true", "domain" : null},
+  {"name" : "bikes", "type" : "esriFieldTypeInteger", "alias" : "Bikes", "nullable" : "true", "domain" : null},
+  {"name" : "address", "type" : "esriFieldTypeString", "alias" : "Address", "length" : "255", "nullable" : "true", "domain" : null},
+  {"name" : "timestamp", "type" : "esriFieldTypeString", "alias" : "Timestamp", "length" : "255", "nullable" : "true", "domain" : null}
+],
+"types" : [],
+"templates" : [],
+"maxRecordCount": 2000,
+"supportedQueryFormats": "JSON",
+"hasStaticData" : true,
+"capabilities" : "Query"
 };
 
 function start() {
@@ -113,6 +163,13 @@ function start() {
 				};
 	}
 	
+	function extStrForExt(ext) {
+		return util.format(templateEnvelope, 
+							ext.xmin, ext.ymin, 
+							ext.xmax, ext.ymax,
+							ext.spatialReference.wkid);
+	}
+	
 	function writeServiceDef(r, response, format, svcName) {
 		var agolDef = cachedCities[svcName].agsSvc;
 		var cityDef = cachedCities[svcName].citySvc;
@@ -129,7 +186,7 @@ function start() {
 			"maxScale": 0
 		});
 
-		console.log(format);
+// 		console.log(format);
 
 		if (format == "json")
 		{
@@ -163,7 +220,9 @@ function start() {
 									   util.format("Sourced from <a href='%s'>%s</a>", cityDef.url, cityDef.url),
 									   "Many thanks to <a href='http://api.citybik.es'>CityBikes</a> for the API!",
 									   thisSvcDef.spatialReference.wkid, 
-									   r.pathname);
+									   extStrForExt(thisSvcDef.initialExtent),
+									   extStrForExt(thisSvcDef.fullExtent),
+									   thisSvcDef.units);
 
 			response.write(restBody);
 			response.write('</div>');
@@ -176,12 +235,16 @@ function start() {
 	function onRequest(request, response) {
 
 		var r = url.parse(request.url, true);
-		if (r.path != '/favicon.ico')
-		{
-			console.log(request.url);
- 		}
+		var pathParts = r.pathname.toLowerCase().replace(/\/+$/,"").split(path.sep);
+		var lastPathPart = pathParts[pathParts.length-1];
+// 		console.log(pathParts);
+// 		console.log(lastPathPart);
 
-		if (/\.css$/.test(r.pathname))
+		if (lastPathPart == 'favicon.ico')
+		{
+			response.end();
+		}
+		else if (/\.css$/.test(lastPathPart))
 		{
 			fs.readFile(__dirname + r.path, 
 						{encoding: 'utf8'}, 
@@ -198,9 +261,9 @@ function start() {
 			if (format == "pjson") { format = "json"; }
 			if (format == "json" || format == "html")
 			{
-				if (r.pathname.toLowerCase().replace(/\/+$/,"") == "/services")
+				if (lastPathPart == "services")
 				{
-					console.log("Services directory requested");
+					console.log("SERVICES");
 					
 					cacheCities(r, function() {
 						var output = {
@@ -255,14 +318,13 @@ function start() {
 						console.log("Written...");
 					});
 				} 
-				else
+				else if (pathParts.length >= 4)
 				{
-					var pathParts = r.path.split(path.sep);
-					console.log(pathParts);
-
-					if (pathParts.length == 4)
+					if (lastPathPart == "featureserver" &&
+						pathParts[pathParts.length - 3] == "services")
 					{
-						console.log("Service Endpoint");
+						// Service Definition
+						console.log("FEATURESERVER");
 						var svcName = pathParts[2];
 						if (cachedCities.hasOwnProperty(svcName))
 						{
@@ -275,11 +337,40 @@ function start() {
 							});
 						}
 					}
-					else
+					else if (lastPathPart == "0" &&
+							 pathParts.length >= 5 &&
+							 pathParts[pathParts.length - 2] == "featureserver" &&
+							 pathParts[pathParts.length - 4] == "services")
+					 {
+					 	// Layer
+					 	console.log("LAYER");
+					 	var cityName = pathParts[pathParts.length - 3];
+					 	var city = cachedCities[cityName];
+					 	
+					 	var thisLayerDef = JSON.parse(JSON.stringify(layerDef));
+					 	thisLayerDef.name = cityName;
+						response.writeHead(200, {'Content-Type': 'text/plain'});
+					 	response.write(JSON.stringify(thisLayerDef));
+					 	response.end();
+					 }
+					else if (lastPathPart == "query" &&
+							 pathParts.length >= 6 &&
+							 pathParts[pathParts.length - 2] == "0" &&
+							 pathParts[pathParts.length - 3] == "featureserver" &&
+							 pathParts[pathParts.length - 5] == "services")
 					{
-						console.log("Unknown request");
+						// Query
+						console.log("QUERY");
 						response.end();
 					}
+					else
+					{
+						response.end();
+					}
+				}
+				else
+				{
+					response.end();
 				}
 			}
 			else
