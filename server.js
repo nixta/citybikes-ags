@@ -237,6 +237,7 @@ function start() {
 		var r = url.parse(request.url, true);
 		var pathParts = r.pathname.toLowerCase().replace(/\/+$/,"").split(path.sep);
 		var lastPathPart = pathParts[pathParts.length-1];
+		console.log(r);
 // 		console.log(pathParts);
 // 		console.log(lastPathPart);
 
