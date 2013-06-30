@@ -15,11 +15,13 @@ var servicesHTML = fs.readFileSync('templates/services.html', 'utf8');
 var serviceHTML = fs.readFileSync('templates/featureService.html', 'utf8');
 var layerHTML = fs.readFileSync('templates/featureLayer.html', 'utf8');
 
-
 var servicesUrl = path.sep + path.join('rest', 'services');
 var serviceUrlTemplate = path.join(servicesUrl,'%s','FeatureServer');
 var layersUrlTemplate = path.join(serviceUrlTemplate,'layers');
 var layerUrlTemplate = path.join(serviceUrlTemplate,'%s');
+
+
+var templatePoint = '{"x" : %d, "y" : %d, "spatialReference" : {"wkid" : 4326}}';
 
 
 var getServiceUrl = function(cityName) {
@@ -84,8 +86,18 @@ exports.servicesOutput = function(cities, format) {
 	
 	var outJSON = JSON.parse(JSON.stringify(servicesJSON));
 	
+	var sortedCityNames = [];
+	
 	for (var cityName in cities)
 	{
+		sortedCityNames.push(cityName);
+	}
+	
+	sortedCityNames.sort();
+	
+	for (var i=0; i<sortedCityNames.length; i++)
+	{
+		var cityName = sortedCityNames[i];
 		var city = cities[cityName];
 		outJSON.services.push(city.agsSvc);
 	}
