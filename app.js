@@ -16,6 +16,11 @@ app.configure(function() {
 	console.log('App Configured');
 });
 
+app.get('/', function onRequest(request, response) {
+	response.writeHead(301, {Location: agol.getServicesUrl()});
+	response.end();
+});
+
 app.get(agol.getServicesUrl(), 
 		function onRequest(request, response) {
 	var r = url.parse(request.url, true);
