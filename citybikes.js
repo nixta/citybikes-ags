@@ -22,8 +22,7 @@ function cacheCities(callback) {
 			res.setEncoding('utf8');
 			var citiesJSON = "";
 
-			res.on('readable', function() {
-				var chunk = res.read();
+			res.on('data', function(chunk) {
 				citiesJSON = citiesJSON + chunk;
 			});
 
