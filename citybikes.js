@@ -41,7 +41,7 @@ function cacheCities(callback) {
 					{
 						cc[city.name] = {
 							"citySvc": city, 
-							"agsSvc": agol.getServiceJSON(city.name)
+							"agsSvc": agol.getServiceJSONForServicesList(city.name)
 						};
 						added++
 					}
