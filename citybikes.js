@@ -1,5 +1,6 @@
 var http = require('http');
 var path = require('path');
+var util = require('util');
 
 var agol = require('./agol.js');
 
@@ -105,7 +106,12 @@ function getBikes(city, callback) {
 				}
 				city.bikes.lastReadTime = new Date();
 				city.bikes.cacheExpirationTime =
-					new Date(city.bikes.lastReadTime.getTime() + 30*60000);
+					new Date(city.bikes.lastReadTime.getTime() + 3*60000);
+					
+				console.log(util.format('Cached %d bikes for %s at %s (expires %s)',
+										bikes.length, city.citySvc.name,
+										city.bikes.lastReadTime,
+										city.bikes.cacheExpirationTime));
 				
 				callback(city.bikes.cachedBikes);
 			});

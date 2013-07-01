@@ -21,7 +21,7 @@ app.get('/', function onRequest(request, response) {
 	response.end();
 });
 
-app.get(agol.getInfoUrl(), 
+app.all(agol.getInfoUrl(), 
 		function onRequest(request, response) {
 	var format = url.parse(request.url, true).query["f"];
 
@@ -78,7 +78,10 @@ app.get(agol.getLayerUrl(':serviceName',':layerId'),
 
 app.get(agol.getLayerQueryUrl(':serviceName',':layerId'), 
 		function onRequest(request, response) {
-	var format = url.parse(request.url, true).query["f"];
+	var query = url.parse(request.url, true).query;
+	var format = query["f"];
+	var returnCountOnly = query["returnCountOnly"] || false;
+	var returnIdsOnly = query["returnIdsOnly"] || false;
 	
 	var svcName = request.params.serviceName;
 	var layerId = request.params.layerId;
@@ -88,8 +91,8 @@ app.get(agol.getLayerQueryUrl(':serviceName',':layerId'),
 	citybikes.getCities(function(cities) {
 		var city = cities[svcName];
 		citybikes.getBikes(city, function(bikes) {
-			var outStr = agol.queryOutput(svcName, layerId, bikes, format);
 			response.writeHead(200, {'Content-Type': agol.contentTypeForFormat(format)});
+			var outStr = agol.queryOutput(svcName, layerId, bikes, format, returnCountOnly, returnIdsOnly);
 			response.end(outStr);
 		});
 	});

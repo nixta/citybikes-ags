@@ -2,11 +2,15 @@ var path = require('path');
 var util = require('util');
 var fs = require('fs');
 
+var infoJSON = JSON.parse(fs.readFileSync('templates/info.json', 'utf8'));
 var servicesJSON = JSON.parse(fs.readFileSync('templates/services.json', 'utf8'));
 var serviceJSON = JSON.parse(fs.readFileSync('templates/featureService.json', 'utf8'));
 var layerJSON = JSON.parse(fs.readFileSync('templates/featureLayer.json', 'utf8'));
 var featureSetJSON = JSON.parse(fs.readFileSync('templates/featureSet.json', 'utf8'));
-var infoJSON = JSON.parse(fs.readFileSync('templates/info.json', 'utf8'));
+
+var queryCountJSON = JSON.parse(fs.readFileSync('templates/queryCount.json', 'utf8'));
+var queryIdsJSON = JSON.parse(fs.readFileSync('templates/queryIds.json', 'utf8'));
+
 
 var serviceFields = JSON.parse(fs.readFileSync('templates/fields.json', 'utf8'));
 layerJSON["fields"] = serviceFields;
@@ -258,16 +262,32 @@ var layerOutput = function(layerName, layerId, cities, format) {
 	return outStr;
 };
 
-var queryOutput = function(layerName, layerId, bikes, format) {
+var queryOutput = function(layerName, layerId, bikes, format, countOnly, idsOnly) {
+	countOnly = countOnly || false;
+	idsOnly = idsOnly || false;
+	
 	var outStr = "";
-
-	var featureSet = JSON.parse(JSON.stringify(featureSetJSON));
-	console.log(featureSet);
-	featureSet.features = bikes;
 
 	if (formatIsJSON(format))
 	{
-		outStr = JSON.stringify(featureSet);
+		if (countOnly)
+		{
+			console.log("queryCount");
+			outStr = queryCountOutput(layerName, layerId, bikes);
+		}
+		else if (idsOnly)
+		{
+			console.log("queryIds");
+			outStr = queryIdsOutput(layerName, layerId, bikes);
+		}
+		else
+		{
+			var featureSet = JSON.parse(JSON.stringify(featureSetJSON));
+			console.log("queryFeatures");
+			featureSet.features = bikes;
+
+			outStr = JSON.stringify(featureSet);
+		}
 	}
 	else
 	{
@@ -277,6 +297,27 @@ var queryOutput = function(layerName, layerId, bikes, format) {
 	return outStr;
 };
 
+var queryCountOutput = function(layerName, layerId, bikes) {
+	var outputJSON = JSON.parse(JSON.stringify(queryCountJSON));
+	
+	outputJSON.layers[0].count = bikes.length;
+	
+	return JSON.stringify(outputJSON);
+};
+
+var queryIdsOutput = function(layerName, layerId, bikes) {
+	var outputJSON = JSON.parse(JSON.stringify(queryIdsJSON));
+
+	var objectIds = outputJSON.layers[0].objectIds;
+	console.log(bikes[0]);
+	for (var i=0; i<bikes.length; i++)
+	{
+		var bike = bikes[i];
+		objectIds.push(bike.attributes.id);
+	}
+
+	return JSON.stringify(outputJSON);
+};
 
 
 // Module Exports
