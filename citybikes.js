@@ -94,7 +94,7 @@ function getBikes(city, callback) {
 				{
 					var bike = bikes[i];
 					var agolBike = { 
-						"geometry": {},
+						"geometry": {"spatialReference": {"wkid":4326}},
 						"attributes": {}
 					};
 					var x = bike.lng / 1000000;
@@ -111,9 +111,9 @@ function getBikes(city, callback) {
 					delete agolBike.attributes["coordinates"];
 					city.bikes.cachedBikes.push(agolBike);
 				}
-				city.bikes.extent = {
-					"minX": minX, "minY": minY,
-					"maxX": maxX, "maxY": maxY
+				city.bikes["extent"] = {
+					"xmin": minX, "ymin": minY,
+					"xmax": maxX, "ymax": maxY
 				};
 				city.bikes.lastReadTime = new Date();
 				city.bikes.cacheExpirationTime =

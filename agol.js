@@ -276,9 +276,10 @@ var layerOutput = function(layerName, layerId, cities, format) {
 	return outStr;
 };
 
-var queryOutput = function(layerName, layerId, bikes, format, countOnly, idsOnly) {
+var queryOutput = function(layerName, layerId, bikes, format, countOnly, idsOnly, outSR) {
 	countOnly = countOnly || false;
 	idsOnly = idsOnly || false;
+	outSR = outSR || 4326;
 	
 	var outStr = "";
 
@@ -295,7 +296,25 @@ var queryOutput = function(layerName, layerId, bikes, format, countOnly, idsOnly
 		else
 		{
 			var featureSet = JSON.parse(JSON.stringify(featureSetJSON));
-			featureSet.features = bikes;
+			
+			if (outSR == 102100)
+			{
+				var projectedBikes = [];
+				
+				for (var i=0; i<bikes.length; i++)
+				{
+					var bike = JSON.parse(JSON.stringify(bikes[i]));
+					bike.geometry = coordToMercator(bike.geometry);
+					projectedBikes.push(bike);
+				}
+
+				featureSet.features = projectedBikes;
+				featureSet.spatialReference.wkid = 102100;
+			}
+			else
+			{
+				featureSet.features = bikes;
+			}
 
 			outStr = featureSet;
 		}
@@ -307,6 +326,28 @@ var queryOutput = function(layerName, layerId, bikes, format, countOnly, idsOnly
 	
 	return outStr;
 };
+
+/*
+This code is shamelessly stolen from the Terraformer project.
+https://github.com/Esri/Terraformer/blob/master/src/terraformer.js#L324
+*/
+var EarthRadius = 6378137,
+	RadiansPerDegree =  0.017453292519943;
+
+function degToRad(deg) {
+	return deg * RadiansPerDegree;
+}
+
+function coordToMercator(coord) {
+	var x = coord.x;
+	var y = Math.max(Math.min(coord.y, 89.99999), -89.99999);
+	return {
+		"x": degToRad(x) * EarthRadius,
+		"y": EarthRadius/2.0 * Math.log( (1.0 + Math.sin(degToRad(y))) / (1.0 - Math.sin(degToRad(y))) ),
+		"spatialReference": {"wkid": 102100}
+	};
+}
+
 
 var queryCountOutput = function(layerName, layerId, bikes) {
 	var outputJSON = JSON.parse(JSON.stringify(queryCountJSON));
