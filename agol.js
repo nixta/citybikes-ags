@@ -17,6 +17,12 @@ layerJSON["fields"] = serviceFields;
 featureSetJSON["fields"] = serviceFields;
 
 
+var agolVersion = 10.1;
+var agolFullVersion = "10.1";
+infoJSON.currentVersion = layerJSON.currentVersion = serviceJSON.currentVersion = agolVersion;
+infoJSON.fullVersion = agolFullVersion;
+
+
 var servicesHTML = fs.readFileSync('templates/services.html', 'utf8');
 var serviceHTML = fs.readFileSync('templates/featureService.html', 'utf8');
 var layerHTML = fs.readFileSync('templates/featureLayer.html', 'utf8');
@@ -35,7 +41,6 @@ var envelopeHTMLTemplate = '<ul>XMin: %d<br/> YMin: %d<br/> ' +
 var fieldHTMLTemplate = '<li>%s <i>(type: %s, alias: %s, nullable: %s, editable: %s)</i></li>\n';
 
 var pointJSONTemplate = '{"x" : %d, "y" : %d, "spatialReference" : {"wkid" : 4326}}';
-
 
 
 
@@ -120,11 +125,11 @@ function getHtmlForServicesLayerEntry(citySvc) {
 var infoOutput = function(format) {
 	if (formatIsJSON(format))
 	{
-		return JSON.stringify(infoJSON);
+		return infoJSON;
 	}
 	else
 	{
-		return infoHTML;
+		return util.format(infoHTML, infoJSON.currentVersion, infoJSON.fullVersion);
 	}
 };
 
@@ -151,7 +156,7 @@ var servicesOutput = function(cities, format) {
 
 	if (formatIsJSON(format))
 	{
-		outStr = JSON.stringify(outJSON);
+		outStr = outJSON;
 	}
 	else
 	{
@@ -185,7 +190,7 @@ var serviceOutput = function(svcName, cities, format) {
 
 	if (formatIsJSON(format))
 	{
-		outStr = JSON.stringify(thisSvcDef);
+		outStr = thisSvcDef;
 	}
 	else
 	{	
@@ -237,7 +242,7 @@ var layerOutput = function(layerName, layerId, cities, format) {
 
 	if (formatIsJSON(format))
 	{
-		outStr = JSON.stringify(thisLayerDef);
+		outStr = thisLayerDef;
 	}
 	else
 	{
@@ -272,21 +277,18 @@ var queryOutput = function(layerName, layerId, bikes, format, countOnly, idsOnly
 	{
 		if (countOnly)
 		{
-			console.log("queryCount");
 			outStr = queryCountOutput(layerName, layerId, bikes);
 		}
 		else if (idsOnly)
 		{
-			console.log("queryIds");
 			outStr = queryIdsOutput(layerName, layerId, bikes);
 		}
 		else
 		{
 			var featureSet = JSON.parse(JSON.stringify(featureSetJSON));
-			console.log("queryFeatures");
 			featureSet.features = bikes;
 
-			outStr = JSON.stringify(featureSet);
+			outStr = featureSet;
 		}
 	}
 	else
@@ -302,7 +304,7 @@ var queryCountOutput = function(layerName, layerId, bikes) {
 	
 	outputJSON.layers[0].count = bikes.length;
 	
-	return JSON.stringify(outputJSON);
+	return outputJSON;
 };
 
 var queryIdsOutput = function(layerName, layerId, bikes) {
@@ -316,7 +318,7 @@ var queryIdsOutput = function(layerName, layerId, bikes) {
 		objectIds.push(bike.attributes.id);
 	}
 
-	return JSON.stringify(outputJSON);
+	return outputJSON;
 };
 
 

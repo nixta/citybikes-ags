@@ -9,7 +9,14 @@ var util = require("util");
 var agol = require('./agol.js');
 var citybikes = require("./citybikes.js");
 
+var useCallback = function(request) {
+	var q = url.parse(request.url, true).query;
+	return q.hasOwnProperty('callback');
+};
+
 app.configure(function() {
+	app.enable("jsonp callback");
+
 	app.use(express.methodOverride());
  
 	// ## CORS middleware
@@ -28,6 +35,10 @@ app.configure(function() {
 		}
 	};
 	app.use(allowCrossDomain);
+	app.use(function(req,res,next) {
+		console.log(req.url);
+		next();
+	});
 
 	app.use(app.router);
 	app.use(express.static(__dirname, {maxAge: 31557600000}));
@@ -46,9 +57,8 @@ app.get(agol.getInfoUrl(),
 
 	console.log("INFO");
 	
-	var outStr = agol.infoOutput(format);
-	response.writeHead(200, {'Content-Type': agol.contentTypeForFormat(format)});
-	response.end(outStr);
+	var output = agol.infoOutput(format);
+	useCallback(request)?response.jsonp(200,output):response.send(200,output);
 });
 
 app.get(agol.getServicesUrl(), 
@@ -58,9 +68,8 @@ app.get(agol.getServicesUrl(),
 	console.log("SERVICES");
 	
 	citybikes.getCities(function(cities) {
-		var outStr = agol.servicesOutput(cities, format);
-		response.writeHead(200, {'Content-Type': agol.contentTypeForFormat(format)});
-		response.end(outStr);
+		var output = agol.servicesOutput(cities, format);
+		useCallback(request)?response.jsonp(200,output):response.send(200,output);
 	});
 });
 
@@ -73,15 +82,16 @@ app.get(agol.getServiceUrl(':serviceName'),
 	console.log("FEATURESERVER");
 
 	citybikes.getCities(function(cities) {
-		var outStr = agol.serviceOutput(svcName, cities, format);
-		response.writeHead(200, {'Content-Type': agol.contentTypeForFormat(format)});
-		response.end(outStr);
+		var output = agol.serviceOutput(svcName, cities, format);
+		useCallback(request)?response.jsonp(200,output):response.send(200,output);
 	});
 });
 
 app.get(agol.getLayerUrl(':serviceName',':layerId'), 
 		function onRequest(request, response) {
-	var format = url.parse(request.url, true).query["f"];
+	var query = url.parse(request.url, true).query;
+	var format = query["f"];
+	var callback = query["callback"] || null;
 	
 	var svcName = request.params.serviceName;
 	var layerId = request.params.layerId;
@@ -89,9 +99,8 @@ app.get(agol.getLayerUrl(':serviceName',':layerId'),
 	console.log("LAYER");
 
 	citybikes.getCities(function(cities) {
-		var outStr = agol.layerOutput(svcName, layerId, cities, format);
-		response.writeHead(200, {'Content-Type': agol.contentTypeForFormat(format)});
-		response.end(outStr);
+		var output = agol.layerOutput(svcName, layerId, cities, format);
+		useCallback(request)?response.jsonp(200,output):response.send(200,output);
 	});
 });
 
@@ -110,9 +119,8 @@ app.get(agol.getLayerQueryUrl(':serviceName',':layerId'),
 	citybikes.getCities(function(cities) {
 		var city = cities[svcName];
 		citybikes.getBikes(city, function(bikes) {
-			response.writeHead(200, {'Content-Type': agol.contentTypeForFormat(format)});
-			var outStr = agol.queryOutput(svcName, layerId, bikes, format, returnCountOnly, returnIdsOnly);
-			response.end(outStr);
+			var output = agol.queryOutput(svcName, layerId, bikes, format, returnCountOnly, returnIdsOnly);
+			useCallback(request)?response.jsonp(200,output):response.send(200,output);
 		});
 	});
 });
