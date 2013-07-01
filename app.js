@@ -10,6 +10,25 @@ var agol = require('./agol.js');
 var citybikes = require("./citybikes.js");
 
 app.configure(function() {
+	app.use(express.methodOverride());
+ 
+	// ## CORS middleware
+	//
+	// see: http://stackoverflow.com/questions/7067966/how-to-allow-cors-in-express-nodejs
+	var allowCrossDomain = function(req, res, next) {
+		res.header('Access-Control-Allow-Origin', '*');
+		res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+		res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+		// intercept OPTIONS method
+		if ('OPTIONS' == req.method) {
+			res.send(200);
+		}
+		else {
+			next();
+		}
+	};
+	app.use(allowCrossDomain);
+
 	app.use(app.router);
 	app.use(express.static(__dirname, {maxAge: 31557600000}));
 
@@ -21,7 +40,7 @@ app.get('/', function onRequest(request, response) {
 	response.end();
 });
 
-app.all(agol.getInfoUrl(), 
+app.get(agol.getInfoUrl(), 
 		function onRequest(request, response) {
 	var format = url.parse(request.url, true).query["f"];
 
