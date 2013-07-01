@@ -6,23 +6,44 @@ var servicesJSON = JSON.parse(fs.readFileSync('templates/services.json', 'utf8')
 var serviceJSON = JSON.parse(fs.readFileSync('templates/featureService.json', 'utf8'));
 var layerJSON = JSON.parse(fs.readFileSync('templates/featureLayer.json', 'utf8'));
 var featureSetJSON = JSON.parse(fs.readFileSync('templates/featureSet.json', 'utf8'));
+var infoJSON = JSON.parse(fs.readFileSync('templates/info.json', 'utf8'));
 
 var serviceFields = JSON.parse(fs.readFileSync('templates/fields.json', 'utf8'));
 layerJSON["fields"] = serviceFields;
+featureSetJSON["fields"] = serviceFields;
 
 
 var servicesHTML = fs.readFileSync('templates/services.html', 'utf8');
 var serviceHTML = fs.readFileSync('templates/featureService.html', 'utf8');
 var layerHTML = fs.readFileSync('templates/featureLayer.html', 'utf8');
+var infoHTML = fs.readFileSync('templates/info.html', 'utf8');
 
 var servicesUrl = path.sep + path.join('rest', 'services');
+var infoUrl = path.sep + path.join('rest', 'info');
 var serviceUrlTemplate = path.join(servicesUrl,'%s','FeatureServer');
 var layersUrlTemplate = path.join(serviceUrlTemplate,'layers');
 var layerUrlTemplate = path.join(serviceUrlTemplate,'%s');
+var queryUrlTemplate = path.join(layerUrlTemplate,'query');
+
+var envelopeHTMLTemplate = '<ul>XMin: %d<br/> YMin: %d<br/> ' +
+					   	   'XMax: %d<br/> YMax: %d<br/> ' + 
+					   	   'Spatial Reference: %d<br/></ul>';
+var fieldHTMLTemplate = '<li>%s <i>(type: %s, alias: %s, nullable: %s, editable: %s)</i></li>\n';
+
+var pointJSONTemplate = '{"x" : %d, "y" : %d, "spatialReference" : {"wkid" : 4326}}';
 
 
-var templatePoint = '{"x" : %d, "y" : %d, "spatialReference" : {"wkid" : 4326}}';
 
+
+
+// URLs
+var getServicesUrl = function() {
+	return servicesUrl;
+};
+
+var getInfoUrl = function() {
+	return infoUrl;
+};
 
 var getServiceUrl = function(cityName) {
 	return util.format(serviceUrlTemplate, cityName);
@@ -36,13 +57,14 @@ var getLayerUrl = function(cityName, layerId) {
 	return util.format(layerUrlTemplate, cityName, layerId);
 };
 
-exports.getServicesUrl = function() {
-	return servicesUrl;
+var getLayerQueryUrl = function(cityName, layerId) {
+	return util.format(queryUrlTemplate, cityName, layerId);
 };
 
-exports.getServiceUrl = getServiceUrl;
 
-exports.getLayerUrl = getLayerUrl;
+
+
+
 
 var getServiceJSONForServicesList = function(cityName) {
 	return {
@@ -52,26 +74,36 @@ var getServiceJSONForServicesList = function(cityName) {
 	};
 };
 
-exports.getServiceJSONForServicesList = getServiceJSONForServicesList;
-
 // Breadcrumb addition
 // > <a href=".../neighborhoods/FeatureServer">neighborhoods (FeatureServer)</a> 
 
 function htmlStringForEnvelope(env) {
-	var templateEnvelope = '<ul>XMin: %d<br/> YMin: %d<br/> ' +
-						   'XMax: %d<br/> YMax: %d<br/> ' + 
-						   'Spatial Reference: %d<br/></ul>';
-	
-	return util.format(templateEnvelope, 
+	return util.format(envelopeHTMLTemplate, 
 						env.xmin, env.ymin, 
 						env.xmax, env.ymax,
 						env.spatialReference.wkid);
 }
 
-function formatIsJSON(format) {
-	var f = format.toLowerCase();
-	return f == "json" || f == "pjson";
+function normalizeFormat(format) {
+	return (format || 'html').toLowerCase();
 }
+
+function formatIsJSON(format) {
+	var f = normalizeFormat(format);
+	return f == 'json' || f == 'pjson';
+}
+
+function contentTypeForFormat(format) {
+	var f = normalizeFormat(format);
+	switch (f)
+	{
+		case 'json':
+		case 'pjson':
+			return 'text/plain';
+		default:
+			return 'text/html';
+	}
+};
 
 function getHtmlForServicesLayerEntry(citySvc) {
 	var servicesLayerEntryHtmlTemplate = '<li><a href="%s">%s</a> (%s)</li>\n';
@@ -81,8 +113,19 @@ function getHtmlForServicesLayerEntry(citySvc) {
 						citySvc.type);
 }
 
-exports.servicesOutput = function(cities, format) {
-	var outStr = ""
+var infoOutput = function(format) {
+	if (formatIsJSON(format))
+	{
+		return JSON.stringify(infoJSON);
+	}
+	else
+	{
+		return infoHTML;
+	}
+};
+
+var servicesOutput = function(cities, format) {
+	var outStr = "";
 	
 	var outJSON = JSON.parse(JSON.stringify(servicesJSON));
 	
@@ -121,7 +164,7 @@ exports.servicesOutput = function(cities, format) {
 	return outStr;
 };
 
-exports.serviceOutput = function(svcName, cities, format) {
+var serviceOutput = function(svcName, cities, format) {
 	var outStr = "";
 
 	var thisSvcDef = JSON.parse(JSON.stringify(serviceJSON));
@@ -167,7 +210,6 @@ exports.serviceOutput = function(svcName, cities, format) {
 	return outStr;
 };
 
-var fieldHTMLTemplate = '<li>%s <i>(type: %s, alias: %s, nullable: %s, editable: %s)</i></li>\n';
 function getHtmlForFields(fields) {
 	var outStr = "";
 	for (var i=0; i < fields.length; i++)
@@ -183,7 +225,7 @@ function getHtmlForFields(fields) {
 	return outStr;
 };
 
-exports.layerOutput = function(layerName, layerId, cities, format) {
+var layerOutput = function(layerName, layerId, cities, format) {
 	var outStr = "";
 
 	var thisLayerDef = JSON.parse(JSON.stringify(layerJSON));
@@ -210,8 +252,45 @@ exports.layerOutput = function(layerName, layerId, cities, format) {
 								thisLayerDef.maxRecordCount,
 								htmlStringForEnvelope(thisLayerDef.extent),
 								getHtmlForFields(thisLayerDef.fields),
-								"./query");
+								getLayerQueryUrl(layerName, layerId));
 	}
 	
 	return outStr;
 };
+
+var queryOutput = function(layerName, layerId, bikes, format) {
+	var outStr = "";
+
+	var featureSet = JSON.parse(JSON.stringify(featureSetJSON));
+	console.log(featureSet);
+	featureSet.features = bikes;
+
+	if (formatIsJSON(format))
+	{
+		outStr = JSON.stringify(featureSet);
+	}
+	else
+	{
+		outStr = "Format must be json or pjson";
+	}
+	
+	return outStr;
+};
+
+
+
+// Module Exports
+exports.getServicesUrl = getServicesUrl;
+exports.getInfoUrl = getInfoUrl;
+exports.getServiceUrl = getServiceUrl;
+exports.getLayerUrl = getLayerUrl;
+exports.getLayerQueryUrl = getLayerQueryUrl;
+
+exports.servicesOutput = servicesOutput;
+exports.infoOutput = infoOutput;
+exports.serviceOutput = serviceOutput;
+exports.layerOutput = layerOutput;
+exports.queryOutput = queryOutput;
+exports.contentTypeForFormat = contentTypeForFormat;
+
+exports.getServiceJSONForServicesList = getServiceJSONForServicesList;

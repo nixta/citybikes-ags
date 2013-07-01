@@ -5,8 +5,6 @@
 	"spatialReference" : {"wkid" : 4326},
 	"hasZ" : false,
 	"hasM" : false,
-	"fields" : [
-	],
-	"features" : [ 
-	]
+	"fields" : [],
+	"features" : []
 }

@@ -21,55 +21,77 @@ app.get('/', function onRequest(request, response) {
 	response.end();
 });
 
+app.get(agol.getInfoUrl(), 
+		function onRequest(request, response) {
+	var format = url.parse(request.url, true).query["f"];
+
+	console.log("INFO");
+	
+	var outStr = agol.infoOutput(format);
+	response.writeHead(200, {'Content-Type': agol.contentTypeForFormat(format)});
+	response.end(outStr);
+});
+
 app.get(agol.getServicesUrl(), 
 		function onRequest(request, response) {
-	var r = url.parse(request.url, true);
-	var format = r.query["f"] || 'html';
+	var format = url.parse(request.url, true).query["f"];
 
 	console.log("SERVICES");
 	
 	citybikes.getCities(function(cities) {
 		var outStr = agol.servicesOutput(cities, format);
-		var hf = (format=='html')?'text/html':'text/plain';
-		response.writeHead(200, {'Content-Type': hf});
+		response.writeHead(200, {'Content-Type': agol.contentTypeForFormat(format)});
 		response.end(outStr);
 	});
 });
 
 app.get(agol.getServiceUrl(':serviceName'), 
 		function onRequest(request, response) {
-	var r = url.parse(request.url, true);
-	var format = r.query["f"] || 'html';
+	var format = url.parse(request.url, true).query["f"];
 
 	var svcName = request.params.serviceName;
 
-	// Service Definition
 	console.log("FEATURESERVER");
 
 	citybikes.getCities(function(cities) {
 		var outStr = agol.serviceOutput(svcName, cities, format);
-		var hf = (format=='html')?'text/html':'text/plain';
-		response.writeHead(200, {'Content-Type': hf});
+		response.writeHead(200, {'Content-Type': agol.contentTypeForFormat(format)});
 		response.end(outStr);
 	});
 });
 
 app.get(agol.getLayerUrl(':serviceName',':layerId'), 
 		function onRequest(request, response) {
-	var r = url.parse(request.url, true);
-	var format = r.query["f"] || 'html';
+	var format = url.parse(request.url, true).query["f"];
 	
 	var svcName = request.params.serviceName;
 	var layerId = request.params.layerId;
 
-	// Layer
 	console.log("LAYER");
 
 	citybikes.getCities(function(cities) {
-		var outStr = agol.layerOutput(svcName, layerId, cities, format);	
-		var hf = (format=='html')?'text/html':'text/plain';
-		response.writeHead(200, {'Content-Type': hf});
+		var outStr = agol.layerOutput(svcName, layerId, cities, format);
+		response.writeHead(200, {'Content-Type': agol.contentTypeForFormat(format)});
 		response.end(outStr);
+	});
+});
+
+app.get(agol.getLayerQueryUrl(':serviceName',':layerId'), 
+		function onRequest(request, response) {
+	var format = url.parse(request.url, true).query["f"];
+	
+	var svcName = request.params.serviceName;
+	var layerId = request.params.layerId;
+
+	console.log("QUERY");
+
+	citybikes.getCities(function(cities) {
+		var city = cities[svcName];
+		citybikes.getBikes(city, function(bikes) {
+			var outStr = agol.queryOutput(svcName, layerId, bikes, format);
+			response.writeHead(200, {'Content-Type': agol.contentTypeForFormat(format)});
+			response.end(outStr);
+		});
 	});
 });
 

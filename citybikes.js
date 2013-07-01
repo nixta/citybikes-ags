@@ -40,7 +40,12 @@ function cacheCities(callback) {
 					{
 						cc[city.name] = {
 							"citySvc": city, 
-							"agsSvc": agol.getServiceJSONForServicesList(city.name)
+							"agsSvc": agol.getServiceJSONForServicesList(city.name),
+							"bikes": { 
+									lastReadTime: -1,
+									cacheExpirationTime: new Date(),
+									cachedBikes: []
+								}
 						};
 						added++
 					}
@@ -61,6 +66,57 @@ function cacheCities(callback) {
 	}
 }
 
+function bikesCacheInvalid(city) {
+	var bikes = city.bikes;
+	return (bikes.lastReadTime == -1 || bikes.cacheExpirationTime <= new Date());
+}
+
+function getBikes(city, callback) {
+	if (bikesCacheInvalid(city))
+	{
+		var cityBikesUrl = city.citySvc.url;
+		http.get(cityBikesUrl,
+				 function (res) {
+			res.setEncoding('utf8');
+			var bikesJSON = "";
+			
+			res.on('data', function(chunk) {
+				bikesJSON = bikesJSON + chunk;
+			});
+
+			res.on('end', function() {
+				var bikes = JSON.parse(bikesJSON);
+
+				city.bikes.cachedBikes = [];
+				for (var i=0; i < bikes.length; i++)
+				{
+					var bike = bikes[i];
+					var agolBike = { 
+						"geometry": {},
+						"attributes": {}
+					};
+					agolBike.geometry["x"] = bike.lng / 1000000;
+					agolBike.geometry["y"] = bike.lat / 1000000;
+					agolBike.attributes = JSON.parse(JSON.stringify(bike));
+					delete agolBike.attributes["lat"];
+					delete agolBike.attributes["lng"];
+					delete agolBike.attributes["coordinates"];
+					city.bikes.cachedBikes.push(agolBike);
+				}
+				city.bikes.lastReadTime = new Date();
+				city.bikes.cacheExpirationTime =
+					new Date(city.bikes.lastReadTime.getTime() + 30*60000);
+				
+				callback(city.bikes.cachedBikes);
+			});
+		});
+	}
+	else
+	{
+		callback(city.bikes.cachedBikes);
+	}
+}
+
 function cacheInvalid() {
 	var now = new Date();
 	return (cachedCities == null) || (now >= cacheExpirationTime);
@@ -76,3 +132,6 @@ exports.getCities = function(callback) {
 		callback(cachedCities);
 	}
 }
+
+exports.getBikes = getBikes;
+
