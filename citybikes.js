@@ -89,6 +89,7 @@ function getBikes(city, callback) {
 				var bikes = JSON.parse(bikesJSON);
 
 				city.bikes.cachedBikes = [];
+				var minX = minY = maxX = maxY = 0;
 				for (var i=0; i < bikes.length; i++)
 				{
 					var bike = bikes[i];
@@ -96,14 +97,24 @@ function getBikes(city, callback) {
 						"geometry": {},
 						"attributes": {}
 					};
-					agolBike.geometry["x"] = bike.lng / 1000000;
-					agolBike.geometry["y"] = bike.lat / 1000000;
+					var x = bike.lng / 1000000;
+					var y = bike.lat / 1000000;
+					agolBike.geometry["x"] = x;
+					agolBike.geometry["y"] = y;
+					if (x < minX) minX = x;
+					if (x > maxX) maxX = x;
+					if (y < minY) minY = y;
+					if (y > maxY) maxY = y;
 					agolBike.attributes = JSON.parse(JSON.stringify(bike));
 					delete agolBike.attributes["lat"];
 					delete agolBike.attributes["lng"];
 					delete agolBike.attributes["coordinates"];
 					city.bikes.cachedBikes.push(agolBike);
 				}
+				city.bikes.extent = {
+					"minX": minX, "minY": minY,
+					"maxX": maxX, "maxY": maxY
+				};
 				city.bikes.lastReadTime = new Date();
 				city.bikes.cacheExpirationTime =
 					new Date(city.bikes.lastReadTime.getTime() + 3*60000);

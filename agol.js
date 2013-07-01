@@ -239,6 +239,15 @@ var layerOutput = function(layerName, layerId, cities, format) {
 
 	var thisLayerDef = JSON.parse(JSON.stringify(layerJSON));
 	thisLayerDef.name = layerName;
+	
+	var city = cities[layerName].citySvc;
+	var x = city.lng / 1000000;
+	var y = city.lat / 1000000;
+	var w = 0.5, h = 0.5;
+	thisLayerDef.extent.xmin = x - (w/2);
+	thisLayerDef.extent.xmax = x + (w/2);
+	thisLayerDef.extent.ymin = y - (h/2);
+	thisLayerDef.extent.ymax = y + (h/2);
 
 	if (formatIsJSON(format))
 	{
