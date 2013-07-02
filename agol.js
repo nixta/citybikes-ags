@@ -42,9 +42,6 @@ var fieldHTMLTemplate = '<li>%s <i>(type: %s, alias: %s, nullable: %s, editable:
 
 var pointJSONTemplate = '{"x" : %d, "y" : %d, "spatialReference" : {"wkid" : 4326}}';
 
-
-
-
 // URLs
 var getServicesUrl = function() {
 	return servicesUrl;

@@ -5,6 +5,7 @@
 	{"name" : "number", "type" : "esriFieldTypeInteger", "alias" : "Number", "nullable" : "true", "domain" : null},
 	{"name" : "free", "type" : "esriFieldTypeInteger", "alias" : "Free", "nullable" : "true", "domain" : null},
 	{"name" : "bikes", "type" : "esriFieldTypeInteger", "alias" : "Bikes", "nullable" : "true", "domain" : null},
+	{"name" : "bikesClass", "type" : "esriFieldTypeString", "alias" : "Bikes Class", "length" : "255", "nullable" : "true", "domain" : null},
 	{"name" : "address", "type" : "esriFieldTypeString", "alias" : "Address", "length" : "255", "nullable" : "true", "domain" : null},
 	{"name" : "timestamp", "type" : "esriFieldTypeString", "alias" : "Timestamp", "length" : "255", "nullable" : "true", "domain" : null}
 ]

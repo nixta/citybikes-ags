@@ -72,6 +72,42 @@ function bikesCacheInvalid(city) {
 	return (bikes.lastReadTime == -1 || bikes.cacheExpirationTime <= new Date());
 }
 
+var classificationScheme = {
+	"0": { "min": 0, "max": 0, "label": "No bikes" },
+	"1": { "min": 1, "max": 1, "label": "1 bike" },
+	"few": { "min": 2, "max": 8, "label": "A few bikes" },
+	"plenty": { "min": 9, "max": 10000, "label": "Plenty of bikes" }
+};
+
+var getBikeRange = function(bike) {
+	var bikesAvailable = bike.attributes.bikes;
+	var classes = [];
+	for (var k in classificationScheme)
+	{
+		classes.push(k);
+	}
+	
+	for (var i=0; i<classes.length; i++)
+	{
+		var className = classes[i];
+		var classRange = classificationScheme[className];
+		var min = classRange.min;
+		var max = classRange.max;
+
+// 		console.log(bikesAvailable + " = " + className + " : " + min + " -> " + max);
+		
+		if (bikesAvailable >= min && bikesAvailable <= max)
+		{
+			bike.attributes["bikesClass"] = classRange.label;
+			break;
+		}
+	}
+	if (!bike.attributes.hasOwnProperty("bikesClass"))
+	{
+		bike.attributes["bikesClass"] = "Woah, that's a lotta bikes!";
+	}
+};
+
 function getBikes(city, callback) {
 	if (bikesCacheInvalid(city))
 	{
@@ -106,6 +142,7 @@ function getBikes(city, callback) {
 					if (y < minY) minY = y;
 					if (y > maxY) maxY = y;
 					agolBike.attributes = JSON.parse(JSON.stringify(bike));
+					getBikeRange(agolBike);
 					delete agolBike.attributes["lat"];
 					delete agolBike.attributes["lng"];
 					delete agolBike.attributes["coordinates"];
