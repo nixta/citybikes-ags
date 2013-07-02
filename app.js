@@ -9,6 +9,10 @@ var util = require("util");
 var agol = require('./agol.js');
 var citybikes = require("./citybikes.js");
 
+String.prototype.bool = function() {
+    return (/^true$/i).test(this);
+};
+
 var useCallback = function(request) {
 	var q = url.parse(request.url, true).query;
 	return q.hasOwnProperty('callback');
@@ -108,8 +112,8 @@ app.get(agol.getLayerQueryUrl(':serviceName',':layerId'),
 		function onRequest(request, response) {
 	var query = url.parse(request.url, true).query;
 	var format = query["f"];
-	var returnCountOnly = query["returnCountOnly"];
-	var returnIdsOnly = query["returnIdsOnly"];
+	var returnCountOnly = (query["returnCountOnly"] || "false").bool();
+	var returnIdsOnly = (query["returnIdsOnly"] || "false").bool();
 	var outSR = query["outSR"];
 	
 	var svcName = request.params.serviceName;

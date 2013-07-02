@@ -361,7 +361,7 @@ var queryIdsOutput = function(layerName, layerId, bikes) {
 	var outputJSON = JSON.parse(JSON.stringify(queryIdsJSON));
 
 	var objectIds = outputJSON.layers[0].objectIds;
-	console.log(bikes[0]);
+
 	for (var i=0; i<bikes.length; i++)
 	{
 		var bike = bikes[i];
