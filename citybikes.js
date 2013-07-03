@@ -4,6 +4,9 @@ var util = require('util');
 
 var agol = require('./agol.js');
 
+var networksCacheTime = 30 * 60000;
+var networkCacheTime = 1 * 60000;
+
 var cachedCities = null;
 var cacheExpirationTime = new Date();
 
@@ -53,7 +56,7 @@ function cacheCities(callback) {
 				}
 				
 				cacheExpirationTime = new Date();
-				cacheExpirationTime.setTime(cacheExpirationTime.getTime() + 30*60000);
+				cacheExpirationTime.setTime(cacheExpirationTime.getTime() + networksCacheTime);
 				console.log("Cached " + added + " new cities!");
 				console.log("Cache expires at: " + cacheExpirationTime);
 			
@@ -154,7 +157,7 @@ function getBikes(city, callback) {
 				};
 				city.bikes.lastReadTime = new Date();
 				city.bikes.cacheExpirationTime =
-					new Date(city.bikes.lastReadTime.getTime() + 3*60000);
+					new Date(city.bikes.lastReadTime.getTime() + networkCacheTime);
 					
 				console.log(util.format('Cached %d bikes for %s at %s (expires %s)',
 										bikes.length, city.citySvc.name,
