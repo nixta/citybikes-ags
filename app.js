@@ -9,6 +9,8 @@ var util = require("util");
 var agol = require('./agol.js');
 var citybikes = require("./citybikes.js");
 
+var citiesCached = false;
+
 String.prototype.bool = function() {
     return (/^true$/i).test(this);
 };
@@ -46,6 +48,11 @@ app.configure(function() {
 
 	app.use(app.router);
 	app.use(express.static(__dirname, {maxAge: 31557600000}));
+	
+	citybikes.getCities(function(cities) {
+		citiesCached = true;
+		console.log("Cities Cached");
+	});
 
 	console.log('App Configured');
 });

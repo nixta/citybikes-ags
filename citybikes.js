@@ -1,6 +1,9 @@
+"use strict";
+
 var http = require('http');
 var path = require('path');
 var util = require('util');
+var fs = require('fs');
 
 var agol = require('./agol.js');
 
@@ -9,8 +12,82 @@ var networkCacheTime = 1 * 60000;
 
 var cachedCities = null;
 var cacheExpirationTime = new Date();
+var citiesAwaitingTimezone = {};
+var cityTimeZones = {};
 
 var cityBikesNetworksURL = "http://api.citybik.es/networks.json";
+var timezoneCacheFilename = "timezones.json";
+
+if (fs.existsSync(timezoneCacheFilename))
+{
+	var fileInfo = fs.statSync(timezoneCacheFilename);
+	var modified = new Date(fileInfo.mtime);
+	var modifiedDay = modified.getDate();
+	var now = new Date();
+	var today = now.getDate();
+	if ((now > modified + (24*60*60*1000)) || (today != modifiedDay))
+	{
+		console.log("Timezones out of date.");	
+	}
+	else
+	{
+		console.log("Loading timezones");
+		cityTimeZones = JSON.parse(fs.readFileSync(timezoneCacheFilename, 'utf8'));
+		console.log("Loaded timezones");
+	}
+}
+
+Object.size = function(obj) {
+    var size = 0, key;
+    for (key in obj) {
+        if (obj.hasOwnProperty(key)) size++;
+    }
+    return size;
+};
+
+var getCityCacheTimezoneInfo = function(cityCacheEntry) {
+	var city = cityCacheEntry.citySvc;
+	if (cityTimeZones.hasOwnProperty(city.name))
+	{
+		return cityTimeZones[city.name];
+	}
+	else
+	{
+		citiesAwaitingTimezone[city.name] = true;
+		var timezoneUrl = util.format("http://api.timezonedb.com/?key=%s&lat=%d&lng=%d&format=json", "IMPMC00M2XNY", city.lat, city.lng);
+		http.get(timezoneUrl, function (res) {
+			var timezoneJSON = "";
+			res.setEncoding('utf8');
+			res.on('data', function(chunk) {
+				timezoneJSON += chunk;
+			});
+			res.on('end', function() {
+				var timezone = JSON.parse(timezoneJSON);
+	// 			console.log("Read timezone!");
+	// 			console.log(city);
+	// 			console.log(timezone);
+				if (timezone.status === "OK")
+				{
+	// 				console.log("Setting timezone");
+					delete timezone["status"];
+					delete timezone["message"];
+					city["timezone"] = timezone;
+
+					cityTimeZones[city.name] = timezone;
+				
+					delete citiesAwaitingTimezone[city.name];
+					console.log("Timezone: " + city.name + " (" + Object.size(citiesAwaitingTimezone) + ")");
+					console.log(timezone);
+					if (Object.size(citiesAwaitingTimezone) == 0)
+					{
+						fs.writeFile('timezones.json', JSON.stringify(cityTimeZones));
+					}
+				}
+			});
+		});
+	}
+}
+
 
 function cacheCities(callback) {
 	if (cacheInvalid())
@@ -37,20 +114,28 @@ function cacheCities(callback) {
 				var cc = cachedCities = {};
 
 				// update cache
-				for (i=0; i<cities.length; i++)
+				for (var i=0; i<cities.length; i++)
 				{
 					var city = cities[i];
 					if (!(city.name in cc))
 					{
-						cc[city.name] = {
+						city.lat = city.lat / 1000000;
+						city.lng = city.lng / 1000000;
+						var cityCacheEntry = {
 							"citySvc": city, 
 							"agsSvc": agol.getServiceJSONForServicesList(city.name),
 							"bikes": { 
 									lastReadTime: -1,
 									cacheExpirationTime: new Date(),
 									cachedBikes: []
-								}
+								},
+							"timezone": ""
 						};
+						
+						cc[city.name] = cityCacheEntry;
+						
+						getCityCacheTimezoneInfo(cityCacheEntry);
+						
 						added++
 					}
 				}
@@ -128,10 +213,37 @@ function getBikes(city, callback) {
 				var bikes = JSON.parse(bikesJSON);
 
 				city.bikes.cachedBikes = [];
-				var minX = minY = maxX = maxY = 0;
+				var minX = 0;
+				var minY = 0;
+				var maxX = 0;
+				var maxY = 0;
 				for (var i=0; i < bikes.length; i++)
 				{
 					var bike = bikes[i];
+					
+					var tmp = new Date(bike.timestamp);
+					// The timestamps are CEST - fix by - 2 hours.
+					tmp.setTime(tmp.getTime() - (2 * 60 * 60 * 1000));
+// 					console.log(tmp.toString() + " >> " + tmp.toUTCString());
+					var epochMS = new Date(tmp).getTime();
+					var localEpochMS = new Date(epochMS).getTime();
+					bike["citybikeTimestamp"] = epochMS;
+// 					console.log(city);
+// 					console.log(city.citySvc);
+					if (cityTimeZones.hasOwnProperty(city.citySvc.name))
+					{
+						var timezone = cityTimeZones[city.citySvc.name];
+						var gmtOffset = parseInt(timezone.gmtOffset);
+// 						console.log("Adjusting timezone for " + city.citySvc.name + " by " + gmtOffset);
+						localEpochMS = localEpochMS + (gmtOffset * 1000);
+					}
+					else
+					{
+						console.log("Uh oh - no timezone for " + city.citySvc.name);
+					}
+					bike["localTimestamp"] = localEpochMS;
+// 					console.log(epochMS + " >> " + localEpochMS);
+					
 					var agolBike = { 
 						"geometry": {"spatialReference": {"wkid":4326}},
 						"attributes": {}
