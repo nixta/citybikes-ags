@@ -9,6 +9,8 @@ var util = require("util");
 var agol = require('./agol.js');
 var citybikes = require("./citybikes.js");
 
+var citiesCached = false;
+
 String.prototype.bool = function() {
     return (/^true$/i).test(this);
 };
@@ -22,6 +24,7 @@ app.configure(function() {
 	app.enable("jsonp callback");
 
 	app.use(express.methodOverride());
+	app.use(express.bodyParser());
  
 	// ## CORS middleware
 	//
@@ -46,11 +49,21 @@ app.configure(function() {
 
 	app.use(app.router);
 	app.use(express.static(__dirname, {maxAge: 31557600000}));
+	
+	citybikes.getCities(function(cities) {
+		citiesCached = true;
+		console.log("Cities Cached");
+	});
 
 	console.log('App Configured');
 });
 
-app.get('/', function onRequest(request, response) {
+app.all('/', function onRequest(request, response) {
+	response.writeHead(301, {Location: agol.getServicesUrl()});
+	response.end();
+});
+
+app.all('/services', function onRequest(request, response) {
 	response.writeHead(301, {Location: agol.getServicesUrl()});
 	response.end();
 });
@@ -65,9 +78,9 @@ app.get(agol.getInfoUrl(),
 	useCallback(request)?response.jsonp(200,output):response.send(200,output);
 });
 
-app.get(agol.getServicesUrl(), 
-		function onRequest(request, response) {
-	var format = url.parse(request.url, true).query["f"];
+//POST
+var servicesHandler = function onRequest(request, response) {
+	var format = request.method==="POST"?request.body["f"]:request.query["f"];
 
 	console.log("SERVICES");
 	
@@ -75,11 +88,14 @@ app.get(agol.getServicesUrl(),
 		var output = agol.servicesOutput(cities, format);
 		useCallback(request)?response.jsonp(200,output):response.send(200,output);
 	});
-});
+};
 
-app.get(agol.getServiceUrl(':serviceName'), 
-		function onRequest(request, response) {
-	var format = url.parse(request.url, true).query["f"];
+app.get(agol.getServicesUrl(), servicesHandler);
+app.post(agol.getServicesUrl(), servicesHandler);
+
+// POST
+var featureServiceHandler = function onRequest(request, response) {
+	var format = request.method==="POST"?request.body["f"]:request.query["f"];
 
 	var svcName = request.params.serviceName;
 
@@ -89,13 +105,13 @@ app.get(agol.getServiceUrl(':serviceName'),
 		var output = agol.serviceOutput(svcName, cities, format);
 		useCallback(request)?response.jsonp(200,output):response.send(200,output);
 	});
-});
+};
 
-app.get(agol.getLayerUrl(':serviceName',':layerId'), 
-		function onRequest(request, response) {
-	var query = url.parse(request.url, true).query;
-	var format = query["f"];
-	var callback = query["callback"] || null;
+app.get(agol.getServiceUrl(':serviceName'), featureServiceHandler);
+app.post(agol.getServiceUrl(':serviceName'), featureServiceHandler);
+
+var featureLayerHandler = function onRequest(request, response) {
+	var format = request.method==="POST"?request.body["f"]:request.query["f"];
 	
 	var svcName = request.params.serviceName;
 	var layerId = request.params.layerId;
@@ -106,15 +122,18 @@ app.get(agol.getLayerUrl(':serviceName',':layerId'),
 		var output = agol.layerOutput(svcName, layerId, cities, format);
 		useCallback(request)?response.jsonp(200,output):response.send(200,output);
 	});
-});
+};
 
-app.get(agol.getLayerQueryUrl(':serviceName',':layerId'), 
-		function onRequest(request, response) {
-	var query = url.parse(request.url, true).query;
-	var format = query["f"];
-	var returnCountOnly = (query["returnCountOnly"] || "false").bool();
-	var returnIdsOnly = (query["returnIdsOnly"] || "false").bool();
-	var outSR = query["outSR"];
+app.get(agol.getLayerUrl(':serviceName',':layerId'), featureLayerHandler);
+app.post(agol.getLayerUrl(':serviceName',':layerId'), featureLayerHandler);
+
+var layerQueryHandler = function onRequest(request, response) {
+	console.log("FLHandler");
+	var p = request.method==="POST";
+	var format = p?request.body["f"]:request.query["f"];
+	var returnCountOnly = ((p?request.body["returnCountOnly"]:request.query["returnCountOnly"]) || "false").bool();
+	var returnIdsOnly = ((p?request.body["returnIdsOnly"]:request.query["returnIdsOnly"]) || "false").bool();
+	var outSR = p?request.body["outSR"]:request.query["outSR"];
 	
 	var svcName = request.params.serviceName;
 	var layerId = request.params.layerId;
@@ -128,6 +147,9 @@ app.get(agol.getLayerQueryUrl(':serviceName',':layerId'),
 			useCallback(request)?response.jsonp(200,output):response.send(200,output);
 		});
 	});
-});
+}
+
+app.get(agol.getLayerQueryUrl(':serviceName',':layerId'), layerQueryHandler);
+app.post(agol.getLayerQueryUrl(':serviceName',':layerId'), layerQueryHandler);
 
 app.listen(process.env.VCAP_APP_PORT || 1337);
