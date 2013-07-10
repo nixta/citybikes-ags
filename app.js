@@ -128,7 +128,6 @@ app.get(agol.getLayerUrl(':serviceName',':layerId'), featureLayerHandler);
 app.post(agol.getLayerUrl(':serviceName',':layerId'), featureLayerHandler);
 
 var layerQueryHandler = function onRequest(request, response) {
-	console.log("FLHandler");
 	var p = request.method==="POST";
 	var format = p?request.body["f"]:request.query["f"];
 	var returnCountOnly = ((p?request.body["returnCountOnly"]:request.query["returnCountOnly"]) || "false").bool();
